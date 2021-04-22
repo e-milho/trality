@@ -89,12 +89,14 @@ SYMBOL_GROUP_2 = ["SOLUSDT","INJUSDT","VETUSDT","YFIUSDT","THETAUSDT"]
 
 def initialize(state):
 
-    print("--------------------------------------------------------------------")
-    print(TITLE + " / " + VERSION)
-    print(AUTHOR)
-    print(DONATE)
-    print("--------------------------------------------------------------------")
+    log_message=("\n--------------------------------------------------------------------\n" +
+        TITLE + " / " + VERSION + "\n" +
+        AUTHOR + "\n" + DONATE +
+        "\n--------------------------------------------------------------------\n\n")
          
+    print(log_message)
+    log(log_message,0)
+
     state.number_offset_trades = 0;
     state.bbres_last = {}
     state.orders = {}
@@ -116,8 +118,8 @@ def initialize(state):
 
     # TRAILING PARAMETERS
     #                              TR_PR_B  TR_PR_S    TR_ST_B    TR_ST_S     WICK_U    WICK_D  WICK_INV
-    state.tr_params["DEFAULT"] =   [ 0.02,    0.02,      0.01,     0.01,        0.97,   1.03,    0.012  ]
-    #state.tr_params["BTCUSDT"] =  [ 0.02,    0.02,      0.01,     0.01,        0.97,   1.03,    0.012  ]
+    state.tr_params["DEFAULT"] =   [ 0.002,    0.001,      0.002,     0.001,        0.97,   1.03,    0.012  ]
+    #state.tr_params["BTCUSDT"] =  [ 0.002,    0.001,      0.002,     0.0o1,        0.97,   1.03,    0.012  ]
     
     # LIMITS 
     #                               MIN_HOLD_V  MAX_HOLD_V  MIN_HOLD_U MAX_HOLD_U MIN_BUY MAX_BUY   MIN_SELL MAX_SELL MIN_SELL_PR MAX_BUY_PR
@@ -318,9 +320,11 @@ def handler_main(state, data):
                     trailing_percent = tr_params[TR_STOP_BUY], 
                     stop_price = float(current_price * (1+tr_params[TR_PRICE_BUY])))
                 # more tight trailing (almost market?)
+                
                 order_trailing_iftouched_value(symbol=data.symbol, value=buy_value*0.5, 
                     trailing_percent = 0.002, 
                     stop_price = float(current_price * 0.995))
+                
             else:
                 # Trailing Buy Order
                 order_trailing_iftouched_value(symbol=data.symbol, value=buy_value, 
@@ -407,3 +411,12 @@ def handler_main(state, data):
                   "......       Current Time:     " + str(datetime.datetime.fromtimestamp(current_time)),
                   "......       Order Age in H:   " + str((current_time - order_time)/3600))
             cancel_order(order.id)
+
+# TODO: Better calculate Trailing 
+
+def dynamic_trailing_limits(open_price, close_price, limit_rate=1.05, trailing_rate=0.5):
+    change_percent = abs((
+        close_price - open_price) / open_price)
+    stop_limit_percent = change_percent * limit_rate
+    trailing_percent = change_percent * trailing_rate
+    return (trailing_percent, stop_limit_percent)
