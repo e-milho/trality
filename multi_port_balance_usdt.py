@@ -1,7 +1,7 @@
 import datetime
 
 TITLE   = "MULTICOIN PORTFOLIO BALANCER - USDT"
-VERSION = "VERSION 5.1"
+VERSION = "VERSION 5.2"
 AUTHOR  = "By @banshee70s @elerouxx in 2021-04-22"
 DONATE  = ("TIP JAR WALLET:  \n" +  
            "ERC20 / BEP20:  0xA44dc8782d13f7728E7ec240D8dA99479d245c3C \n" +
@@ -46,7 +46,7 @@ I'm not financial advisor ;)
 # MAIN PARAMETERS ENUMERATION AND DESCRIPTION (DON'T EDIT THIS. SET ALL PARAMETERS AFTER LINE 80)
 
 #                     BASE_INV   B_ADD  S_ADD  B_MULT   S_MULT   B_RSI_TOL  B_BB_TOL  B_TOL  S_RSI_TOL   S_BB_TOL   S_TOL
-# EXAMPLE PARAMS =  [  0.015,     0,      0,     1.1,    0.9,      0.5,     0.998,    0.6,    0.5,       1.002,     0.6]
+# EXAMPLE PARAMS =  [  0.015,     0,      0,     1.1,    0.9,      0.5,     0.98,    0.6,    0.5,       1.02,     0.6]
 
 # MAIN PARAMETERS DESCRIPTION AND ENUMERATION (DON'T EDIT)
 
@@ -112,29 +112,26 @@ def initialize(state):
 
     # MAIN PARAMETERS (Edit default and/or create specific parameters for each pair)
     
-    #                              BASE_INV   B_ADD  S_ADD  B_MULT   S_MULT   B_RSI_TOL  B_BB_TOL  B_TOL  S_RSI_TOL   S_BB_TOL   S_TOL
-    state.params["DEFAULT"]  =    [  0.02,     0,      0,     1.1,    0.9,      0.5,     0.998,    0.6,    0.5,       1.002,     0.6]
-    #state.params["BTCUSDT"]  =   [  0.02,     0,      0,     1.1,    0.9,      0.5,     0.998,    0.6,    0.5,       1.002,     0.6]
+    #                              BASE_INV   B_ADD  S_ADD  B_MULT   S_MULT   B_RSI_TOL B_BB_TOL  B_TOL  S_RSI_TOL   S_BB_TOL   S_TOL
+    state.params["DEFAULT"]  =    [  0.017,     0,      0,     1.1,    0.9,     0.5,    0.998,   0.5,    0.5,        1.002,     0.5]  
 
     # TRAILING PARAMETERS
     #                              TR_PR_B  TR_PR_S    TR_ST_B    TR_ST_S     WICK_U    WICK_D  WICK_INV
-    state.tr_params["DEFAULT"] =   [ 0.002,    0.001,      0.002,     0.001,        0.97,   1.03,    0.012  ]
-    #state.tr_params["BTCUSDT"] =  [ 0.002,    0.001,      0.002,     0.0o1,        0.97,   1.03,    0.012  ]
+    state.tr_params["DEFAULT"] =   [ 0.05,    0.05,      0.02,     0.02,     0.97,   1.03,    0.012  ]
     
     # LIMITS 
     #                               MIN_HOLD_V  MAX_HOLD_V  MIN_HOLD_U MAX_HOLD_U MIN_BUY MAX_BUY   MIN_SELL MAX_SELL MIN_SELL_PR MAX_BUY_PR
-    state.limits["DEFAULT"]  =     [  -1,         -1,          -1,       -1,      11,      150,      -11,      -150,      0,        0      ]
-
-    state.limits["BTCUSDT"]  =     [  1500,       -1,        0.025,     -1,      11,      150,      -11,      -150,      0,         0      ]
-    state.limits["ETHUSDT"]  =     [  1000,       -1,        0.4,       -1,      11,      150,      -11,      -150,      0,         0      ]
-    state.limits["BNBUSDT"]  =     [  400,        -1,        0.7,       -1,      11,      150,      -11,      -150,      0,         0      ]
-    state.limits["LINKUSDT"]  =    [  150,        -1,        -1,        -1,      11,      150,      -11,      -150,      0,         0      ]
-    state.limits["ATOMUSDT"]  =    [  150,        -1,        -1,        -1,      11,      150,      -11,      -150,      0,         0      ]
-    state.limits["SOLUSDT"]  =     [  50,         -1,        -1,        -1,      11,      150,      -11,      -150,      0,         0      ]
-    state.limits["INJUSDT"]  =     [  50,         -1,        -1,        -1,      11,      150,      -11,      -150,      0,         0      ]
-    state.limits["VETUSDT"]  =     [  50,         -1,        -1,        -1,      11,      150,      -11,      -150,      0,         0      ]
-    state.limits["YFIUSDT"]  =     [  100,        -1,        -1,        -1,      11,      150,      -11,      -150,      0,         0      ]
-    state.limits["THETAUSDT"]  =   [  50,         -1,        -1,        -1,      11,      150,      -11,      -150,      0,         0      ]
+    state.limits["DEFAULT"]  =     [  -1,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["BTCUSDT"]  =     [  -1,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["ETHUSDT"]  =     [  -1,        -1,        -1,        -1,      11,      200,      -11,      -300,      0,         0      ]
+    state.limits["BNBUSDT"]  =     [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["LINKUSDT"]  =    [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["ATOMUSDT"]  =    [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["SOLUSDT"]  =     [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["INJUSDT"]  =     [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["VETUSDT"]  =     [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["YFIUSDT"]  =     [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["THETAUSDT"]  =   [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
       
 
 
@@ -279,7 +276,7 @@ def handler_main(state, data):
     available_liquidity = port.excess_liquidity_quoted 
 
     # Don't spend below minimum hold of quote asset
-    low_liquidity = available_liquidity < state.min_liquidity_hold
+    low_liquidity = available_liquidity < state.min_liquidity_hold and state.min_liquidity_hold is not -1
      
      # Calculate max and min allowed holdings in units and usd value
     buy_out_of_range = False
@@ -319,11 +316,10 @@ def handler_main(state, data):
                 order_trailing_iftouched_value(symbol=data.symbol, value=buy_value*0.5, 
                     trailing_percent = tr_params[TR_STOP_BUY], 
                     stop_price = float(current_price * (1+tr_params[TR_PRICE_BUY])))
-                # more tight trailing (almost market?)
-                
+                # more tight trailing (almost market?)               
                 order_trailing_iftouched_value(symbol=data.symbol, value=buy_value*0.5, 
-                    trailing_percent = 0.002, 
-                    stop_price = float(current_price * 0.995))
+                    trailing_percent = 0.0025, 
+                    stop_price = float(current_price * 0.9950))
                 
             else:
                 # Trailing Buy Order
@@ -412,11 +408,5 @@ def handler_main(state, data):
                   "......       Order Age in H:   " + str((current_time - order_time)/3600))
             cancel_order(order.id)
 
-# TODO: Better calculate Trailing 
-
-def dynamic_trailing_limits(open_price, close_price, limit_rate=1.05, trailing_rate=0.5):
-    change_percent = abs((
-        close_price - open_price) / open_price)
-    stop_limit_percent = change_percent * limit_rate
-    trailing_percent = change_percent * trailing_rate
-    return (trailing_percent, stop_limit_percent)
+           
+           
