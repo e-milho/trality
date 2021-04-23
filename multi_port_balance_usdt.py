@@ -219,7 +219,7 @@ def handler_main(state, data):
     try:
         limits = state.limits[symbol]
     except KeyError:
-        limits = state.tr_params["DEFAULT"]
+        limits = state.limits["DEFAULT"]
     
 
     # BOLLINGER BANDS 
