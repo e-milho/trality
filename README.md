@@ -13,7 +13,8 @@ The bot also makes use of 'trailing orders' to maximize good sell/buy prices.
 All parameters, trailing parameters and limits can be set globally (as default) and also, optionally, 
 can be set individually for any or each portfolio pair (overrides default).
 
-REV 6:
-- Changed the method of calculating BBANDS strength.
-- Introducing a longer interval of Bollinger Bands to reinforce the buy/sell signal
+REV 5.5
+- Corrected a small but important error in code :D
+
+
 
