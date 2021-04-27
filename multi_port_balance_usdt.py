@@ -1,7 +1,7 @@
 import datetime
 
 TITLE   = "MULTICOIN PORTFOLIO BALANCER - USDT"
-VERSION = "VERSION 5.2"
+VERSION = "VERSION 5.7"
 AUTHOR  = "By @banshee70s @elerouxx in 2021-04-22"
 DONATE  = ("TIP JAR WALLET:  \n" +  
            "ERC20 / BEP20:  0xA44dc8782d13f7728E7ec240D8dA99479d245c3C \n" +
@@ -46,7 +46,7 @@ I'm not financial advisor ;)
 # MAIN PARAMETERS ENUMERATION AND DESCRIPTION (DON'T EDIT THIS. SET ALL PARAMETERS AFTER LINE 80)
 
 #                     BASE_INV   B_ADD  S_ADD  B_MULT   S_MULT   B_RSI_TOL  B_BB_TOL  B_TOL  S_RSI_TOL   S_BB_TOL   S_TOL
-# EXAMPLE PARAMS =  [  0.015,     0,      0,     1.1,    0.9,      0.5,     0.98,    0.6,    0.5,       1.02,     0.6]
+# EXAMPLE PARAMS =  [  0.012,     0,      0,     1.1,    0.9,      0.5,     0.98,    0.63,    0.5,       1.02,     0.63]
 
 # MAIN PARAMETERS DESCRIPTION AND ENUMERATION (DON'T EDIT)
 
@@ -116,22 +116,17 @@ def initialize(state):
     state.params["DEFAULT"]  =    [  0.017,     0,      0,     1.1,    0.9,     0.5,    0.998,   0.5,    0.5,        1.002,     0.5]  
 
     # TRAILING PARAMETERS
-    #                              TR_PR_B  TR_PR_S    TR_ST_B    TR_ST_S     WICK_U    WICK_D  WICK_INV
-    state.tr_params["DEFAULT"] =   [ 0.05,    0.05,      0.02,     0.02,     0.97,   1.03,    0.012  ]
+    #                              TR_PR_B  TR_PR_S    TR_ST_B    TR_ST_S   WICK_U   WICK_D   WICK_INV
+    state.tr_params["DEFAULT"] =   [ 0.015,   0.015,      0.008,     0.008,     0.97,   1.03,    0.012  ]
     
     # LIMITS 
     #                               MIN_HOLD_V  MAX_HOLD_V  MIN_HOLD_U MAX_HOLD_U MIN_BUY MAX_BUY   MIN_SELL MAX_SELL MIN_SELL_PR MAX_BUY_PR
-    state.limits["DEFAULT"]  =     [  -1,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
-    state.limits["BTCUSDT"]  =     [  -1,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
-    state.limits["ETHUSDT"]  =     [  -1,        -1,        -1,        -1,      11,      200,      -11,      -300,      0,         0      ]
-    state.limits["BNBUSDT"]  =     [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
-    state.limits["LINKUSDT"]  =    [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
-    state.limits["ATOMUSDT"]  =    [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
-    state.limits["SOLUSDT"]  =     [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
-    state.limits["INJUSDT"]  =     [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
-    state.limits["VETUSDT"]  =     [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
-    state.limits["YFIUSDT"]  =     [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
-    state.limits["THETAUSDT"]  =   [  50,        -1,        -1,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["DEFAULT"]  =     [  100,       -1,        -1,        -1,      11,      300,      -11,      -300,      0,         0      ]
+    state.limits["BTCUSDT"]  =     [  -1,        -1,     0.025,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["ETHUSDT"]  =     [  -1,        -1,       0.4,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["BNBUSDT"]  =     [  400,       -1,       0.6,        -1,      11,      200,      -11,      -200,      0,         0      ]
+    state.limits["INJUSDT"]  =     [  250,       -1,       0.6,        -1,      11,      200,      -11,      -200,      0,         0      ]
+
       
 
 
@@ -300,40 +295,41 @@ def handler_main(state, data):
         bbands_str = (float(bbands_lower)/current_price) ** 10
         buy_str = bbands_str * rsi_str
 
+
         print("+",
-              "BUY SIGNAL: " + data.symbol + "   STRENGTH: " + str(buy_str) + "   ( RSI STR: " + str(rsi_str) + "    BB STR: " + str(bbands_str) + " ) ",
-              "....RSI: " + str(rsi2) + " RSI AVG: " + str(rsi_avg))
+              "BUY SIGNAL: " + data.symbol + " STRENGTH: " + str(buy_str) + "| RSI STR: " + str(rsi_str) + " BB STR: " + str(bbands_str) + "| RSI: " + str(rsi2) + " RSI AVG: " + str(rsi_avg))
 
         if buy_str > params[BUY_TOL] and not buy_out_of_range and not low_liquidity:
+            
             # add weight and user modifications, up to maximum allowed
             buy_value = min(buy_value * buy_str * params[BUY_MULT] + params[BUY_ADD], limits[MAX_BUY])
             # set to minimum if value is below minimum
             buy_value = max(buy_value, limits[MIN_BUY])
+            print(".....Asset Balance: " + str(asset_total_units) + " " + asset + " (~ " + str(asset_total_value)+" USD)" 
+               + " Current Price: " + str(current_price))
 
             if buy_value > 22:
                 # split in two orders with different trailing settings
-                print("......(SPLIT ORDERS)")
-                order_trailing_iftouched_value(symbol=data.symbol, value=buy_value*0.5, 
-                    trailing_percent = tr_params[TR_STOP_BUY], 
-                    stop_price = float(current_price * (1+tr_params[TR_PRICE_BUY])))
+                print(".....(SPLIT ORDERS)")
+                print(".....Trailing Buy 1:   " + str(buy_value*0.51) + " Trailing %: " + str(tr_params[TR_STOP_BUY]) + 
+                    " Trigger Price: "+ str(float(current_price * (1- tr_params[TR_PRICE_BUY]))))
+                print(".....Trailing Buy 2:   " + str(buy_value*0.5) + " Trailing %: " + str(0.0025) 
+                    + " Trigger Price: "+ str(float(current_price * 0.9950)))    
+                order_trailing_iftouched_value(symbol=data.symbol, value=buy_value*0.51, 
+                    trailing_percent = tr_params[TR_STOP_BUY], stop_price = float(current_price * (1-tr_params[TR_PRICE_BUY])))
                 # more tight trailing (almost market?)               
                 order_trailing_iftouched_value(symbol=data.symbol, value=buy_value*0.5, 
-                    trailing_percent = 0.0025, 
-                    stop_price = float(current_price * 0.9950))
+                    trailing_percent = 0.0025, stop_price = float(current_price * 0.9950))
                 
             else:
                 # Trailing Buy Order
+                print(".....Trailing Buy:   " + str(buy_value*0.51) + " Trailing %: " + str(tr_params[TR_STOP_BUY]) + 
+                    " Trigger Price: "+ str(float(current_price * (1- tr_params[TR_PRICE_BUY]))))
                 order_trailing_iftouched_value(symbol=data.symbol, value=buy_value, 
-                    trailing_percent = tr_params[TR_STOP_BUY], 
-                    stop_price = float(current_price * (1-tr_params[TR_PRICE_BUY])))
+                    trailing_percent = tr_params[TR_STOP_BUY], stop_price = float(current_price * (1-tr_params[TR_PRICE_BUY])))
 
-            # Log
-            print(".....Asset Balance:   " + str(asset_total_units) + " " + asset + " (~ " + str(asset_total_value)+" USD)")
-            print(".....Current Price:   " + str(current_price),
-                  ".....Trailing Buy:    " + str(buy_value) + " Trailing %: " + str(tr_params[TR_STOP_BUY]) + " Trigger Price: "+ str(float(current_price * (1- tr_params[TR_PRICE_BUY]))))    
         elif buy_out_of_range:
-            print(".....Asset Balance:   "+ str(asset_total_units) + " " + asset + " (~ " + str(asset_total_value)+" USD)",
-                  ".....x    NO BUY: ASSET ABOVE MAXIMUM HOLD")
+            print(".....x    NO BUY: ASSET ABOVE MAXIMUM HOLD")
         elif low_liquidity:
             print(".....Available Liquidity: " + str(available_liquidity) +
                 "\n.....x    NO BUY: LOW LIQUIDITY" )
@@ -360,29 +356,31 @@ def handler_main(state, data):
             sell_value = max(sell_value * sell_str * params[SELL_MULT] + params[SELL_ADD], limits[MAX_SELL])
             # set to minimum if value is below minimum
             sell_value = min(sell_value, limits[MIN_SELL])
+            print(".....Asset Balance: " + str(asset_total_units) + " " + asset + " (~ " + str(asset_total_value)+" USD)" 
+               + " Current Price: " + str(current_price))
 
-            if sell_value > 22:
-                print("......(SPLIT ORDERS)")
+            if sell_value < -22:
                 # split in two orders with different trailing settings
+                print(".....(SPLIT ORDERS)")
+                print(".....Trailing Sell 1:   " + str(sell_value*0.51) + " Trailing %: " + str(tr_params[TR_STOP_SELL]) + 
+                    " Trigger Price: "+ str(float(current_price * (1- tr_params[TR_PRICE_SELL]))))
+                print(".....Trailing Sell 2:   " + str(sell_value*0.5) + " Trailing %: " + str(0.0025) 
+                    + " Trigger Price: "+ str(float(current_price * 0.9950)))    
+
+                order_trailing_iftouched_value(symbol=data.symbol, value=sell_value*0.51, 
+                    trailing_percent = tr_params[TR_STOP_SELL], stop_price = float(current_price * (1+tr_params[TR_PRICE_SELL])))
+                # more tight trailing (almost market?)               
                 order_trailing_iftouched_value(symbol=data.symbol, value=sell_value*0.5, 
-                    trailing_percent = tr_params[TR_STOP_SELL], 
-                    stop_price = float(current_price * (1+tr_params[TR_PRICE_SELL])))
-                # more tight trailing (almost market?)
-                order_trailing_iftouched_value(symbol=data.symbol, value=sell_value*0.5, 
-                    trailing_percent = 0.002, 
-                    stop_price = float(current_price * 1.005))
+                    trailing_percent = 0.0025, stop_price = float(current_price * 1.005))
             else:
                 # Trailing Sell Order
+                print(".....Trailing Sell:   " + str(sell_value*0.51) + " Trailing %: " + str(tr_params[TR_STOP_SELL]) + 
+                    " Trigger Price: "+ str(float(current_price * (1- tr_params[TR_PRICE_SELL]))))
                 order_trailing_iftouched_value(symbol=data.symbol, value=sell_value, 
                     trailing_percent = tr_params[TR_STOP_SELL], 
                     stop_price = float(current_price * (1+tr_params[TR_PRICE_SELL])))
-
-            # Log
-            print("......Asset Balance:   "+ str(asset_total_units) + " "+ asset + " (~ " + str(asset_total_value)+" USD)",
-                  "......Current Price:   " + str(current_price),
-                  "......Trailing Sell:   " + str(sell_value) + " Trailing %: " + str(tr_params[TR_STOP_SELL]) + " Trigger Price: "+ str(float(current_price * (1+tr_params[TR_PRICE_SELL]))))      
+     
         elif sell_out_of_range:
-            print("......Asset Balance:   "+ str(asset_total_units) + " " + asset + " (~ " + str(asset_total_value)+" USD)")
             print("......x    NO SELL: ASSET BELOW MINIMUM HOLD")
         else:
             print("......x    NO SELL: WEAK SIGNAL")
@@ -408,5 +406,3 @@ def handler_main(state, data):
                   "......       Order Age in H:   " + str((current_time - order_time)/3600))
             cancel_order(order.id)
 
-           
-           
