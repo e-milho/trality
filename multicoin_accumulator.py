@@ -398,7 +398,7 @@ def handler_main(state, data):
                 order_value = max(order_value, hold_params[MIN_BUY])
 
                 if order_value + state.min_liquidity_hold > available_liquidity:
-                    print("order value (" + str(order_value) + ") will hit minimum liquidity (" + str(asset_total_volume)+ ")  - NO BUY")
+                    print("order value (" + str(order_value) + ") will hit minimum liquidity (" + str(available_liquidity)+ ")  - NO BUY")
                     break
 
                 if hold_params[MAX_BUY_PRICE] is not NO and current_price > hold_params[MAX_BUY_PRICE]:
