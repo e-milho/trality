@@ -123,7 +123,7 @@ def initialize(state):
 
     #                                 ┌───── custom bollinger buy/sell bands ───┐   ┌────── rsi buy/sell zones and sharpness ──────────┐
     #                                  BB_LEN  LOW_MULT  LOW_ADD  UP_MULT  UP_ADD     BUY_RSI  BUY_RSI_SHARP  SELL_RSI  SELL_RSI_SHARP
-    state.signal_params["DEFAULT"] =  [  40,     1.9,       2,      2,       3,         30,          0.5,         75,        0.5       ]
+    state.signal_params["DEFAULT"] =  [  40,     1.9,       2,      2,       3,         30,          0.5,         70,        0.5       ]
     state.signal_params["BTCUSDT"] =  [  40,     1.8,       2,      2,       3,         35,          0.3,         75,        0.3       ]
     
 
@@ -355,13 +355,13 @@ def handler_main(state, data):
    
      # Calculate max and min allowed holdings in units and usd value
     buy_out_of_range = False
-    if hold_params[MAX_HOLD_U] is not NO and asset_total_units > hold_params[MAX_HOLD_U]:
+    if hold_params[MAX_HOLD_A] is not NO and asset_total_units > hold_params[MAX_HOLD_A]:
         buy_out_of_range = True 
     if hold_params[MAX_HOLD_V] is not NO and asset_total_value > hold_params[MAX_HOLD_V]:
         buy_out_of_range = True
 
     sell_out_of_range = False
-    if hold_params[MIN_HOLD_U] is not NO and asset_total_units < hold_params[MIN_HOLD_U]:
+    if hold_params[MIN_HOLD_A] is not NO and asset_total_units < hold_params[MIN_HOLD_A]:
         sell_out_of_range = True 
     if hold_params[MIN_HOLD_V] is not NO and asset_total_value < hold_params[MIN_HOLD_V]:
         sell_out_of_range = True
