@@ -251,9 +251,9 @@ def handler_main(state, data):
     # RSI 'TURNAROUND' signal calculation
 
     # get RSI of last 3 bars
-    rsi3 = data.close.rsi(14)[0]
-    rsi2 = data.close.rsi(14)[-1]
-    rsi1 = data.close.rsi(14)[-2]
+    rsi3 = data.close.rsi(14)[-1]
+    rsi2 = data.close.rsi(14)[-2]
+    rsi1 = data.close.rsi(14)[-3]
 
     # on erronous data return early (indicators are of NoneType)
     if rsi1 is None or rsi2 is None or rsi3 is None:
