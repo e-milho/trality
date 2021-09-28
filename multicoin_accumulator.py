@@ -42,7 +42,7 @@ MIN_HOLD_V, MAX_HOLD_V, MIN_HOLD_A, MAX_HOLD_A = [0,1,2,3]
 MIN_BUY, MAX_BUY, MIN_SELL, MAX_SELL = [4,5,6,7]
 MAX_BUY_PRICE, MIN_SELL_PRICE = [8,9]
 # signal parameter constants
-BB_LEN,  LOW_MULT, LOW_ADD, UP_MULT, UP_ADD, BUY_RSI,  BUY_RSI_SHARP,  SELL_RSI,  SELL_RSI_SHARP = [0,1,2,3,4,5,6,7,8]
+BB_LEN,  LOW_MULT, LOW_ADD, UP_MULT, UP_ADD, BUY_RSI,  BUY_RSI_SHARP,  SELL_RSI,  SELL_RSI_SHARP, RSI_F = [0,1,2,3,4,5,6,7,8,9]
 # order parameter constants
 PERC, TYPE,  B_PRICE,  S_PRICE,  B_TR_PERC,  S_TR_PERC = [0,1,2,3,4,5]
 MARKET, LIMIT, TRAIL = [0,1,2]
@@ -56,12 +56,12 @@ NO = -1
 # (Or you can use the same pairs with a different interval below) 
 # MUST have at least one pair in each group
 
-symbol_group_1 = ["BTCUSDT","ETHUSDT","ADAUSDT","DOTUSDT","SOLUSDT"]
-symbol_group_2 = ["LUNAUSDT","NEARUSDT","FTTUSDT","AVAXUSDT","ATOMUSDT"]
+symbol_group_1 = ["BTCUSDT","ETHUSDT","ADAUSDT","SOLUSDT","DOTUSDT"]
+symbol_group_2 = ["LUNAUSDT","NEARUSDT","FTTUSDT","ATOMUSDT","AVAXUSDT"]
 
 # (quick override for fast test/refine)
-# symbol_group_1 = ["BTCUSDT"]
-# symbol_group_2 = ["LUNAUSDT"]
+#symbol_group_1 = ["BTCUSDT"]
+#symbol_group_2 = ["LUNAUSDT"]
 
 # Can use different intervals in each schedule/group (supported intervals: 1m 5m 15m 30m 1h 6h 12h 1d)
 interval_1 = "6h"
@@ -71,8 +71,8 @@ interval_2 = "6h"
 order_timeout = 24
 
 # Window size for data retrieval (edit if getting errors when using very long indicator periods)
-window_size_1 = 80
-window_size_2 = 80
+window_size_1 = 200
+window_size_2 = 200
 
 # ┌─────────────────────────────────────────────────────────┐
 # │           INITIALIZATION AND PARAMETER SETUP            │
@@ -112,8 +112,8 @@ def initialize(state):
 
     #                           ┌───────── investment base percent and modifiers ────────┐ 
     #                           INV_PERC  INV_VAL*  BUY_ADD  SELL_ADD  BUY_MULT  SELL_MULT  
-    state.params["DEFAULT"]  =  [   2,      NO,        0,       0,      1.2,       0.8   ]
-    state.params["BTCUSDT"]  =  [   3,      NO,        0,       0,      1.2,       0.6   ]
+    state.params["DEFAULT"]  =  [   1.5,     NO,        0,       0,      1,        0.7   ]
+    state.params["BTCUSDT"]  =  [   2,       NO,        0,       0,      1,        0.6   ]
 
     # SIGNAL PARAMETERS:     
     # Bollinger Bands: set LEN, MULT (contract and expand) and ADD (raise or lower) to tweak lower and upper bands.
@@ -121,11 +121,13 @@ def initialize(state):
     # RSI: set Buy maximum and Sell minimum RSI values. A RSI TURNAROUND (valley or peak) beyond these values will trigger a RSI signal.
     # RSI sharp: a higher value will require a more "pointy" RSI turnaround (i.e. a sharper 'V' in the RSI graph to trigger buy signal)
 
-    #                                 ┌───── custom bollinger buy/sell bands ───┐   ┌────── rsi buy/sell zones and sharpness ──────────┐
-    #                                  BB_LEN  LOW_MULT  LOW_ADD  UP_MULT  UP_ADD     BUY_RSI  BUY_RSI_SHARP  SELL_RSI  SELL_RSI_SHARP
-    state.signal_params["DEFAULT"] =  [  40,     1.9,       2,      2,       3,         30,          0.5,         70,        0.5       ]
-    state.signal_params["BTCUSDT"] =  [  40,     1.8,       2,      2,       3,         35,          0.3,         75,        0.3       ]
+    #                                 ┌───── custom bollinger buy/sell bands ───┐  ┌──────────── rsi buy/sell zones and sharpness ─────────────┐
+    #                                 BB_LEN  LOW_MULT  LOW_ADD  UP_MULT  UP_ADD   BUY_RSI  BUY_RSI_SHARP  SELL_RSI  SELL_RSI_SHARP   RSI_F
+    state.signal_params["DEFAULT"] =  [  40,     1.9,       2,      1.9,     1,      30,           0,         70,          0,         10       ]
+    #state.signal_params["BTCUSDT"] = [  40,     1.8,       2,      2.1,     3,      35,          0.3,        75,          1,          0       ]
     
+    # (*Note: RSI_F is an experimental parameter for movable RSI zones. RSI_F = 0 will just use the defined BUY and SELL RSI lines)
+
 
     # ORDER PARAMETERS:
     # Allows split orders with different types/parameters - for scaled buy/sell, or result comparison
@@ -135,10 +137,10 @@ def initialize(state):
     # B_PRICE and S_PRICE are % values related to current price (i.e. '-2' sets order price to 2% BELOW current price).
     # B_TR_PERC and S_TR_PERC are percent values for trailing orders [positive 0-100]. Not used for other types.
      
-    #                                 ┌────────────────────── order A ───────────────────┐   ┌─────────────────── order B ────────────────────────┐ ┌─── etc.
+    #                                 ┌────────────────────── order A ───────────────────┐  ┌─────────────────── order B ────────────────────────┐ ┌─ etc.
     #                                   PERC  TYPE  B_PRICE  S_PRICE  B_TR_PERC  S_TR_PERC    PERC   TYPE   B_PRICE  S_PRICE  B_TR_PERC  S_TR_PERC 
-    state.order_params["DEFAULT"] =  [[ 50,   LIMIT,  0.05,   -0.05,       NO,       NO   ], [ 51,   TRAIL,   0.5,     -0.5,     1.5,       1.5    ] ]
-    state.order_params["BTCUSDT"] =  [[ 50,   TRAIL,  0.05,   -0.05,        2,        2   ], [ 51,   TRAIL,   -0.5,     0.5,     2,           2    ] ]
+    state.order_params["DEFAULT"] =   [[ 50,   TRAIL,   0.5,   -0.5,       3,        3   ], [ 51,   TRAIL,    0.5,    -0.5,      6,      6    ] ]
+    #state.order_params["BTCUSDT"] =  [[ 50,   LIMIT,   0.5,   -0.5,       2,        2   ], [ 51,   TRAIL,   -0.5,     0.5,      2,      2    ] ]
 
     # HOLD PARAMETERS:
     # min and max values or amounts (whichever comes first) to hold for each asset. It won't sell below min or buy above max.
@@ -147,8 +149,8 @@ def initialize(state):
 
     #                              ┌──── min and max val/amount to HODL ────────┐   ┌───────────  min and max buy/sell values and prices  ────────────┐
     #                              MIN_HOLD_V  MAX_HOLD_V  MIN_HOLD_A  MAX_HOLD_A   MIN_BUY  MAX_BUY  MIN_SELL  MAX_SELL  MAX_BUY_PRICE  MIN_SELL_PRICE
-    state.hold_params["DEFAULT"] = [ NO,        NO,         NO,         NO,            11,    300,      11,      300,          NO,           NO        ]
-    state.hold_params["BTCUSDT"] = [ NO,        NO,        0.01,        NO,            11,    300,      11,      300,        42000,         50000      ]
+    state.hold_params["DEFAULT"] =  [ NO,        NO,         NO,        NO,            11,    300,      11,      300,          NO,           NO        ]
+    #state.hold_params["BTCUSDT"] = [ NO,        NO,        0.01,       NO,            11,    300,      11,      300,        40000,         47000      ]
 
 
 # ┌────────────────────────────────────────┐
@@ -221,7 +223,7 @@ def process_group_2(state, data):
 
 
 # ┌─────────────────────────────────────────────────┐
-# │          MAIN HANDLE (Actual Bot Code)          │
+# │          MAIN HANDLE (Strategy Code)            │
 # └─────────────────────────────────────────────────┘
 
 
@@ -262,42 +264,44 @@ def handler_main(state, data):
     # rsi middle (50) set to a variable for later use. (find a movable center that helps working with divergences)
     # rsi_middle = 50
 
+    # new idea: test inverted rsi trend to minimize divergences
+    rsi_trend = data.close.rsi(180)[-1]
+    rsi_sell_zone = (50 - rsi_trend) * signal_params[RSI_F]/100 + signal_params[SELL_RSI]
+    rsi_buy_zone = (50 - rsi_trend) * signal_params[RSI_F]/100 + signal_params[BUY_RSI]
+    
+
+
     # RSI signal: when last 3 bars rsi form a turnaround (V shape for buy, a 'peak' for sell)
     rsi_buy_signal = rsi2 <= signal_params[BUY_RSI] and rsi2 + signal_params[BUY_RSI_SHARP] < rsi1 and rsi2 + signal_params[BUY_RSI_SHARP] < rsi3
     rsi_sell_signal = rsi2 >= signal_params[SELL_RSI] and rsi2 - signal_params[SELL_RSI_SHARP] > rsi1 and rsi2 - signal_params[SELL_RSI_SHARP] > rsi3
+
+    # new ideia (cont)
+    rsi_buy_signal = rsi2 <= rsi_buy_zone and rsi2 + signal_params[BUY_RSI_SHARP] < rsi1 and rsi2 + signal_params[BUY_RSI_SHARP] < rsi3
+    rsi_sell_signal = rsi2 >= rsi_sell_zone and rsi2 - signal_params[SELL_RSI_SHARP] > rsi1 and rsi2 - signal_params[SELL_RSI_SHARP] > rsi3
     
     # RSI strength: how far beyond buy and sell rsi settings. 
     # Example: if RSI_BUY set to 30, signal weight would be 1.0 at RSI 30, 1.33 at RSI 20 and 2.0 (max) at RSI zero. This weight will be used to increase or decrease investment.
     rsi_buy_strength = 1 + (signal_params[BUY_RSI] - rsi2 ) / max(signal_params[BUY_RSI], 0.01)
     rsi_sell_strength = 1 + (rsi2 - signal_params[SELL_RSI]) / (100 - min(signal_params[SELL_RSI], 0.99))
 
-    # some debug logs
-    '''
-    if rsi_buy_signal:
-        print ("RSI BUY SIGNAL - rsi1: " + str(rsi1) + " rsi2: " + str(rsi2) + " rsi3: "+ str(rsi3))   
-    if rsi_sell_signal:
-        print ("RSI SELL SIGNAL - rsi1: " + str(rsi1) + " rsi2: " + str(rsi2) + " rsi3: "+ str(rsi3))
-    '''
-
-
-    # plot rsi and buy/sell zones 
-    # Stragegy note: look for a formula to better detect divergences
-    # - (probably some kind of inverse price oscillator in range 0-100 that adds/multiplies to the RSI would help testing this)
+    # plot rsi and buy/sell zones
+    # (Experimental RSI sell 'zones' instead of fixed lines)
     with PlotScope.group("rsi", data.symbol):
-        plot_line("buy rsi zone", signal_params[BUY_RSI])
-        plot_line("sell rsi zone", signal_params[SELL_RSI])
+        plot_line("buy rsi line", signal_params[BUY_RSI])
+        plot_line("sell rsi line", signal_params[SELL_RSI])
         plot_line("rsi", rsi2)
-        #plot_line("rsi_avg", rsi_avg)
+        plot_line("rsi sell zone", rsi_sell_zone)
+        plot_line("rsi buy zone", rsi_buy_zone)
+        #plot_line("rsi_trend", rsi_trend)
 
     # CUSTOM BOLLINGER BAND signal calculation
 
     bbands_length = signal_params[BB_LEN]
-    # separate multipliers for upper and lower band (lowering value shrinks/contracts the band)
+    # separate multipliers for upper and lower band (expands or contracts the bands)
     upper_band_mult = signal_params[UP_MULT]
     lower_band_mult = signal_params[LOW_MULT]
-    # separate values to be added or substracted (raises and lowers the band)
-    # (in % units, taking price as 100%, so this parameter can easily be used with all tokens)
-    upper_band_add = signal_params[UP_ADD]  * data.close_last / 100   # ...already did
+    # separate values to be added or substracted (raises and lowers the bands)
+    upper_band_add = signal_params[UP_ADD]  * data.close_last / 100  
     lower_band_add = signal_params[LOW_ADD]  * data.close_last / 100    
 
     sma = data.close.sma(bbands_length)
@@ -327,6 +331,12 @@ def handler_main(state, data):
 
     # Plotting default bbands just for reference
     # bbands = data.bbands(20,2)
+
+    # plotting signal lines for debug purposes (rsi/bbands/confluence signal)
+    with PlotScope.group("signal status", data.symbol):
+        plot_line("signal", (bbands_sell_signal and rsi_sell_signal)*4 - (bbands_buy_signal and rsi_buy_signal)*4)
+        plot_line("rsi signal", rsi_sell_signal*1 - rsi_buy_signal*1)
+        plot_line("bbands_signal", bbands_sell_signal*2 - bbands_buy_signal*2)
 
 
     # BASE INVESTMENT (% of equity for these pairs, or fixed value)
@@ -366,8 +376,19 @@ def handler_main(state, data):
     if hold_params[MIN_HOLD_V] is not NO and asset_total_value < hold_params[MIN_HOLD_V]:
         sell_out_of_range = True
 
+    # add some status plots
+    '''
+    with PlotScope.group("status", data.symbol):
+        plot_line("low liquidity", 105 - low_liquidity * 10)
+        plot_line("buy out of range", 105 - buy_out_of_range * 5)
+        plot_line("sell out of range", 105 + sell_out_of_range * 5) 
+    '''
+    with PlotScope.group("balance", data.symbol):
+        plot_line("Asset balance in $", asset_total_value)
+        plot_line("Available liquidity", available_liquidity)
 
-    # BUY SIGNALS EXECUTION
+
+    # BUY SIGNALS
 
     if rsi_buy_signal and bbands_buy_signal:
         # calculate strength of bbands breakout
@@ -436,7 +457,7 @@ def handler_main(state, data):
 
         print(".")
 
-    # SELL SIGNALS EXECUTION
+    # SELL SIGNALS
 
     elif rsi_sell_signal and bbands_sell_signal:
         # calculate strength of bbands breakout 
